@@ -1,6 +1,6 @@
 {
   "id": "toggle-layer-visibility-2fokbj",
-  "name": "toggle-layer-visibility",
+  "name": "Toggle Layer Visibility",
   "version": "1.0.0",
   "main": "index.html",
   "host": [

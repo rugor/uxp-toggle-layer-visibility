@@ -1,6 +1,7 @@
+.gitignore
 .DS_Store
-node_modules/
-dist/
-# Logs
 logs
 npm-debug.log*
+*.ccx
+*.psd
+node_modules/
