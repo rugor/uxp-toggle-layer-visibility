@@ -27,4 +27,9 @@ li:before {
 .button-row {
   display: flex;
   justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.button-row:last-child {
+  margin-bottom: 0;
 }
