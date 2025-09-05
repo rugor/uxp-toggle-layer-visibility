@@ -56,6 +56,12 @@ document.addEventListener('DOMContentLoaded', function () {
         return
       }
 
+      console.log(`Document: ${doc.title}`)
+      console.log(`Total layers in document: ${doc.layers.length}`)
+      
+      // Debug: Log all layers and their visibility
+      await logLayerStructure(doc.layers, 0)
+
       // Ask user to select export directory
       const folder = await fs.getFolder()
       if (!folder) {
@@ -68,7 +74,8 @@ document.addEventListener('DOMContentLoaded', function () {
       // Execute as modal
       await core.executeAsModal(
         async () => {
-          await exportVisibleLayers(doc.layers, folder)
+          const totalExported = await exportVisibleLayers(doc.layers, folder)
+          console.log(`Total layers exported: ${totalExported}`)
         },
         { commandName: 'Export Layers as PNG' }
       )
@@ -80,6 +87,19 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   })
 })
+
+// Debug function to log layer structure
+async function logLayerStructure(layers, depth) {
+  const indent = '  '.repeat(depth)
+  for (let i = 0; i < layers.length; i++) {
+    const layer = layers[i]
+    console.log(`${indent}Layer: "${layer.name}", visible: ${layer.visible}, kind: ${layer.kind}, hasLayers: ${!!(layer.layers && layer.layers.length > 0)}`)
+    
+    if (layer.layers && layer.layers.length > 0) {
+      await logLayerStructure(layer.layers, depth + 1)
+    }
+  }
+}
 
 // Recursive function to set visibility for all layers including in groups
 async function setAllLayersVisibility(layers, isVisible) {
@@ -112,6 +132,7 @@ async function setAllLayersVisibility(layers, isVisible) {
 // Recursive function to export all visible layers as PNG files
 async function exportVisibleLayers(layers, folder) {
   console.log(`Processing ${layers.length} layers for export`)
+  let exportCount = 0
 
   for (let i = 0; i < layers.length; i++) {
     const layer = layers[i]
@@ -119,15 +140,24 @@ async function exportVisibleLayers(layers, folder) {
     try {
       // If this is a group, process its children recursively
       if (layer.layers && layer.layers.length > 0) {
-        await exportVisibleLayers(layer.layers, folder)
+        console.log(`Processing group: ${layer.name}`)
+        const childCount = await exportVisibleLayers(layer.layers, folder)
+        exportCount += childCount
       } else if (layer.visible && layer.kind !== 'groupEnd') {
+        console.log(`Found visible layer to export: ${layer.name}, kind: ${layer.kind}`)
         // Export this visible layer
         await exportLayerAsPNG(layer, folder)
+        exportCount++
+      } else {
+        console.log(`Skipping layer: ${layer.name}, visible: ${layer.visible}, kind: ${layer.kind}`)
       }
     } catch (err) {
       console.error(`Error processing layer "${layer.name}":`, err)
     }
   }
+  
+  console.log(`Exported ${exportCount} layers from this level`)
+  return exportCount
 }
 
 // Function to export a single layer as PNG
@@ -160,28 +190,18 @@ async function exportLayerAsPNG(layer, folder) {
       layer.visible = true
       doc.activeLayer = layer
 
-      // Create the file path for export
-      const filePath = folder.nativePath + '/' + fileName
+      // Create the file using UXP file system API
+      const file = await folder.createFile(fileName, { overwrite: true })
 
-      // Export using batchPlay
-      await batchPlay([
-        {
-          _obj: 'exportDocument',
-          _target: [{ _ref: 'document', _enum: 'ordinal', _value: 'targetEnum' }],
-          as: {
-            _obj: 'PNGFormat',
-            transparency: true,
-            interlaced: false
-          },
-          in: {
-            _path: filePath,
-            _kind: 'local'
-          },
-          _options: {
-            dialogOptions: 'dontDisplay'
-          }
-        }
-      ])
+      console.log(`Saving PNG with transparency for layer: ${layer.name}`)
+      
+      // Use the reliable saveAs.png method
+      await doc.saveAs.png(file, {
+        compression: 0,
+        embedColorProfile: true,
+        transparency: true,
+        interlaced: false
+      })
 
       console.log(`Successfully exported: ${fileName}`)
       

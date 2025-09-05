@@ -1,0 +1,50 @@
+{
+  "id": "uxp-toggle-layer-visibility",
+  "name": "Toggle Layer Visibility & Export",
+  "version": "1.0.0",
+  "host": {
+    "app": "PS",
+    "minVersion": "24.0.0"
+  },
+  "type": "panel",
+  "uiEntry": {
+    "type": "panel",
+    "id": "main-panel"
+  },
+  "manifestVersion": 4,
+  "entrypoints": [
+    {
+      "type": "panel",
+      "id": "main-panel",
+      "label": "Layer Visibility"
+    }
+  ],
+  "icons": [
+    {
+      "width": 23,
+      "height": 23,
+      "path": "icons/dark@1x.png",
+      "scale": [1, 2],
+      "theme": ["darkest", "dark", "medium"]
+    },
+    {
+      "width": 23,
+      "height": 23,
+      "path": "icons/light@1x.png",
+      "scale": [1, 2],
+      "theme": ["lightest", "light"]
+    }
+  ],
+  "permissions": {
+    "allowCodeGenerationFromStrings": true,
+    "launchProcess": {
+      "schemes": ["https"],
+      "domains": ["adobe.com", "adobe.io"]
+    },
+    "localFileSystem": "fullAccess"
+  },
+  "requiredPermissions": {
+    "allowCodeGenerationFromStrings": true,
+    "localFileSystem": "fullAccess"
+  }
+}
